@@ -19,8 +19,9 @@ def substitute_get(key):
 		ck_table = dbcur.execute('''SELECT * FROM sqlite_master WHERE type='table' AND name='substitle';''').fetchone()
 		if not ck_table: return key
 		keyLower = str(key).lower()
-		results = dbcur.execute('''SELECT * FROM substitle WHERE originalTitle=?''', (keyLower,)).fetchone()
-		if results:
+		if results := dbcur.execute(
+			'''SELECT * FROM substitle WHERE originalTitle=?''', (keyLower,)
+		).fetchone():
 			return results.get('subTitle','')
 		else:
 			return key
@@ -38,8 +39,7 @@ def all_substitutes(self):
 		dbcur = get_connection_cursor(dbcon)
 		sub_table = dbcur.execute('''SELECT * FROM sqlite_master WHERE type='table' AND name='substitle';''').fetchone()
 		if not sub_table: return results
-		results1 = dbcur.execute('''SELECT * FROM substitle''').fetchall()
-		if results1:
+		if results1 := dbcur.execute('''SELECT * FROM substitle''').fetchall():
 			results = results1
 		return results
 	except:
@@ -75,20 +75,17 @@ def get_connection():
 	return dbcon
 
 def get_connection_cursor(dbcon):
-	dbcur = dbcon.cursor()
-	return dbcur
+	return dbcon.cursor()
 
 def _dict_factory(cursor, row):
-	d = {}
-	for idx, col in enumerate(cursor.description): d[col[0]] = row[idx]
-	return d
+	return {col[0]: row[idx] for idx, col in enumerate(cursor.description)}
 
 def clear_substitute(table, key):
 	cleared = False
 	try:
 		dbcon = get_connection()
 		dbcur = dbcon.cursor()
-		dbcur.execute('''DELETE FROM {} WHERE originalTitle=?;'''.format(table), (key,))
+		dbcur.execute(f'''DELETE FROM {table} WHERE originalTitle=?;''', (key,))
 		dbcur.connection.commit()
 		control.refresh()
 		cleared = True
